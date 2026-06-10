@@ -7,6 +7,7 @@ from langchain_openai import ChatOpenAI   # LLM
 from langchain_core.prompts import ChatPromptTemplate   # Structures the prompt
 from langchain_core.output_parsers import StrOutputParser   # Converts the LLM's response to a plain string
 from langchain_core.runnables import RunnablePassthrough
+from langchain_core.chat_history import InMemoryChatMessageHistory    # Add memory for conversation history
 
 load_dotenv()
 
@@ -16,6 +17,9 @@ MODEL = "gpt-4o"
 def get_llm(temperature=0.2):
     return ChatOpenAI(model=MODEL, temperature=temperature)
 
+# Returns an empty chat history object that for tracking the conversation
+def get_memory():
+    return InMemoryChatMessageHistory()
 
 # PROMPT
 # The template that tells the LLM how to behave and what structure to respond in
@@ -28,6 +32,9 @@ Do not invent numbers or trends not present in the context.
 
 Retrieved Data:
 {context}
+
+Conversation History:
+{chat_history}
 
 Question: {question}
 
@@ -43,14 +50,22 @@ Provide your response in the following structure:
 # Connects the retriever → prompt → LLM → output parser into one callable pipeline
 
 # Builds the full RAG pipeline: retrieves relevant chunks → fills prompt → sends to LLM → returns response
-def build_insight_chain(retriever):
+def build_insight_chain(retriever, memory: InMemoryChatMessageHistory):
     llm = get_llm()
-    
+
     def format_docs(docs):
         return "\n\n".join(doc.page_content for doc in docs)
-    
+
+    def get_history(_):
+        messages = memory.messages
+        return "\n".join([f"{m.type}: {m.content}" for m in messages])
+
     chain = (
-        {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        {
+            "context": retriever | format_docs,
+            "chat_history": get_history,
+            "question": RunnablePassthrough()
+        }
         | INSIGHT_PROMPT
         | llm
         | StrOutputParser()
