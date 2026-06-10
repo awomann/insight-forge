@@ -1,9 +1,11 @@
+# Giving LLM access to Superstore data so we prevent guessing and hallucinating.
+
 # IMPORTS
 import os
 import pandas as pd
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
-from langchain_core.documents import Document
+from langchain_openai import OpenAIEmbeddings    # Converts text into vectors
+from langchain_chroma import Chroma  # Vector database that stores vectors
+from langchain_core.documents import Document   # LangChain's wrapper for a chunk of text
 from dotenv import load_dotenv
 
 load_dotenv()
