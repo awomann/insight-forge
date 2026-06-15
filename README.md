@@ -38,3 +38,19 @@ Insight Forge/
 │   └── governance.py       # Report generation & audit trail
 └── notebooks/              # Exploration notebooks
 ```
+
+## Future State
+
+### UX Redesign: Dashboard View
+The current multi-page navigation separates insight, evidence, fairness, 
+and governance into distinct panels. A future redesign should consolidate 
+these into a unified dashboard view:
+
+- **Query input** at the top
+- **Insight summary** with inline confidence score and fairness status
+- **Collapsible detail panels** for evidence, assumptions, and full governance report
+- **Drill-down navigation** preserved for deep analysis
+
+This mirrors an admin/command center pattern — decision makers get a full 
+picture at a glance, with the option to investigate further without leaving 
+the view.
