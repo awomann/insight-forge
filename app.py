@@ -241,3 +241,15 @@ elif page == "📄 Governance":
             st.markdown(f"### Status: {report['status']}")
 
             # Confidence and fairness summary
+            col1, col2 = st.columns(2)
+            col1.metric("Confidence", report["confidence"]["label"])
+            col2.metric("Fairness Flags", report["fairness"]["total_flags"])
+
+            with st.expander("Full Report"):
+                st.markdown(format_report_markdown(report))
+            st.download_button(
+                "Download Report",
+                data=format_report_markdown(report),
+                file_name="governance_report.md",
+                mime="text/markdown",
+            )
