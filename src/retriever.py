@@ -21,25 +21,25 @@ def dataframe_to_documents(df: pd.DataFrame) -> list:
     docs = []
 
     # Chunk: monthly summary by region
-    df['Order Date'] = pd.to_datetime(df['Order Date'])
-    df['Month'] = df['Order Date'].dt.to_period('M').astype(str)
+    df['order_date'] = pd.to_datetime(df['order_date'])
+    df['month'] = df['order_date'].dt.to_period('M').astype(str)
 
-    for (month, region), group in df.groupby(['Month', 'Region']):
+    for (month, region), group in df.groupby(['month', 'region']):
         text = (
             f"Month: {month} | Region: {region}\n"
-            f"Total Sales: ${group['Sales'].sum():,.2f} | "
-            f"Total Profit: ${group['Profit'].sum():,.2f} | "
+            f"Total Sales: ${group['sales'].sum():,.2f} | "
+            f"Total Profit: ${group['profit'].sum():,.2f} | "
             f"Orders: {len(group)}"
         )
         docs.append(Document(page_content=text, metadata={"type": "monthly_region", "month": month, "region": region}))
 
     # Chunk: category summary
-    for category, group in df.groupby('Category'):
+    for category, group in df.groupby('product_category'):
         text = (
             f"Category: {category}\n"
-            f"Total Sales: ${group['Sales'].sum():,.2f} | "
-            f"Total Profit: ${group['Profit'].sum():,.2f} | "
-            f"Profit Margin: {group['Profit'].sum()/group['Sales'].sum()*100:.1f}% | "
+            f"Total Sales: ${group['sales'].sum():,.2f} | "
+            f"Total Profit: ${group['profit'].sum():,.2f} | "
+            f"Profit Margin: {group['profit'].sum()/group['sales'].sum()*100:.1f}% | "
             f"Orders: {len(group)}"
         )
         docs.append(Document(page_content=text, metadata={"type": "category_summary", "category": category}))

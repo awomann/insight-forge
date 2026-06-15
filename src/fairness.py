@@ -15,8 +15,8 @@ DISPARITY_THRESHOLD = 0.20
 # REGIONAL FAIRNESS
 # Checks whether any geographic region deviates significantly from the average for a given metric
 
-def assess_regional_fairness(df: pd.DataFrame, metric: str = "Profit") -> dict:
-    regional = df.groupby("Region")[metric].mean()
+def assess_regional_fairness(df: pd.DataFrame, metric: str = "profit") -> dict:
+    regional = df.groupby("region")[metric].mean()
     overall_mean = df[metric].mean()
     
     disparities = []
@@ -43,8 +43,8 @@ def assess_regional_fairness(df: pd.DataFrame, metric: str = "Profit") -> dict:
 # SEGMENT FAIRNESS
 # Checks whether Consumer, Corporate, and Home Office segments are served equally
 
-def assess_segment_fairness(df: pd.DataFrame, metric: str = "Profit") -> dict:
-    by_segment = df.groupby("Segment")[metric].mean()
+def assess_segment_fairness(df: pd.DataFrame, metric: str = "profit") -> dict:
+    by_segment = df.groupby("customer_segment")[metric].mean()
     overall_mean = df[metric].mean()
     
     disparities = []

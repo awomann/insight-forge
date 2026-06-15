@@ -45,8 +45,8 @@ def score_confidence(retrieved_docs: list, df: pd.DataFrame) -> dict:
 
 def document_assumptions(df: pd.DataFrame) -> list:
     return [
-        f"Analysis covers {df['Order Date'].min().date()} to {df['Order Date'].max().date()}",
-        f"Dataset contains {len(df):,} transactions across {df['Region'].nunique()} regions",
+        f"Analysis covers {df['order_date'].min().date()} to {df['order_date'].max().date()}",
+        f"Dataset contains {len(df):,} transactions across {df['region'].nunique()} regions",
         "Sales figures are in USD",
         "Profit is calculated as revenue minus cost of goods sold",
         "Historical data may not reflect current business conditions"
