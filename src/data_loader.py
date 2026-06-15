@@ -1,21 +1,44 @@
-# imports
+"""
+data_loader.py
+--------------
+Loads and prepares the Superstore dataset for InsightForge.
+Remaps original column names to internal standard names on load.
+"""
+
+# IMPORTS & CONFIG
+
 import pandas as pd
 import numpy as np
 from pathlib import Path
 
-# to reach local files in the data folder
 DATA_DIR = Path(__file__).parent.parent / "data"
 
-# function to load sales data; isolates only relevant columns
-def load_sales_data():
-    df = pd.read_csv(DATA_DIR / "sales.csv", encoding="latin-1")
-    df = df[['Order ID', 'Order Date', 'Region', 'City', 'State', 'Segment', 'Category', 'Sub-Category', 'Product Name', 'Sales', 'Quantity', 'Discount', 'Profit']]
-    df['Order Date'] = pd.to_datetime(df['Order Date'])
-    return df
 
-# ['Row ID', 'Order ID', 'Order Date', 'Ship Date', 'Ship Mode', 'Customer ID', 'Customer Name', 'Segment', 'Country', 'City', 'State', 'Postal Code', 'Region', 'Product ID', 'Category', 'Sub-Category', 'Product Name', 'Sales', 'Quantity', 'Discount', 'Profit']
-# sales trends—product Name, sales, qty, discount, category, geo data
-# regional analysis—all geo data
-# product categories—category, sub-category, sales 
-# customer segments—segment, geo data
-# fairness checks—not sure
+# Maps Superstore column names → internal standard names
+SUPERSTORE_COLUMN_MAP = {
+    "Order ID":      "order_id",
+    "Order Date":    "order_date",
+    "Region":        "region",
+    "City":          "city",
+    "State":         "state",
+    "Segment":       "customer_segment",
+    "Category":      "product_category",
+    "Sub-Category":  "product_name",
+    "Product Name":  "product_full_name",
+    "Sales":         "sales",
+    "Quantity":      "quantity",
+    "Discount":      "discount",
+    "Profit":        "profit",
+}
+
+def load_sales_data() -> pd.DataFrame:
+    """Load sales.csv and remap column names to internal standard."""
+    df = pd.read_csv(DATA_DIR / "sales.csv", encoding="latin-1")
+    rename = {k: v for k, v in SUPERSTORE_COLUMN_MAP.items() if k in df.columns}
+    df = df.rename(columns=rename)
+    df["order_date"] = pd.to_datetime(df["order_date"])
+    df["sales"] = pd.to_numeric(df["sales"], errors="coerce")
+    df["profit"] = pd.to_numeric(df["profit"], errors="coerce")
+    df["quantity"] = pd.to_numeric(df["quantity"], errors="coerce")
+    df = df.dropna(subset=["sales", "order_date"])
+    return df
