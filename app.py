@@ -79,7 +79,7 @@ with st.sidebar:
 
 # PAGES
 
-# Home —
+# Home — landing page with app description and getting started instructions
 if page == "🏠 Home":
     st.title("InsightForge 2.0")
     st.subheader("Explainable AI-Powered Business Intelligence")
@@ -92,7 +92,7 @@ if page == "🏠 Home":
     2. Head to **Query & Insights** to start asking questions
     """)
 
-# Query & Insights
+# Query & Insights — text input that triggers the RAG chain and displays the generated insight
 elif page == "🔍 Query & Insights":
     st.title("Query & Insights")
     st.markdown("Ask a question about your data.")
@@ -129,3 +129,115 @@ elif page == "🔍 Query & Insights":
         if st.session_state.last_insight:
             st.markdown("### Insight")
             st.success(st.session_state.last_insight["response"])
+
+# Evidence — shows which data chunks were retrieved and the confidence breakdown
+elif page == "📋 Evidence":
+    st.title("Evidence Panel")
+    st.markdown("See exactly which data was retrieved to generate the insight.")
+
+    # Guard — a query must have been run first
+    if st.session_state.last_insight is None:
+        st.info("Run a query first to see evidence.")
+    else:
+        ev = st.session_state.last_insight["evidence"]
+        
+        # Retrieved chunks
+        st.markdown(f"**Question:** {ev['question']}")
+        st.markdown(f"**Chunks retrieved:** {ev['chunks_used']}")
+        st.markdown("### Retrieved Data")
+        for i, chunk in enumerate(ev["retrieved_data"]):
+            with st.expander(f"Chunk {i+1} — {chunk['metadata'].get('type', 'unknown')}"):
+                st.text(chunk["content"])
+                st.json(chunk["metadata"])
+
+        # Confidence breakdown
+        st.markdown("### Confidence")
+        conf = st.session_state.last_insight["confidence"]
+        st.markdown(f"**Level:** {conf['label']} ({conf['overall_score']})")
+        for k, v in conf["components"].items():
+            st.progress(v, text=f"{k.replace('_', ' ').title()}: {v:.0%}")
+
+        # Assumptions
+        st.markdown("### Assumptions")
+        for a in st.session_state.last_insight["assumptions"]:
+            st.markdown(f"- {a}")
+
+# Fairness — runs disparity checks across regions and customer segments
+elif page == "⚖️ Fairness":
+    st.title("Fairness Assessment")
+    st.markdown("Checks whether any region or customer segment deviates significantly from the average.")
+
+    # Guard — data must be loaded before running checks
+    if st.session_state.df is None:
+        st.info("Load a dataset to run fairness checks.")
+    else:
+        from src.fairness import run_full_fairness_check
+
+        # Run all checks and display overall status
+        results = run_full_fairness_check(st.session_state.df)
+        if results["overall_fair"]:
+            st.success("✅ No significant fairness issues detected.")
+        else:
+            st.warning(f"⚠️ {results['total_flags']} disparity flag(s) detected.")
+        st.markdown(results["summary"])
+
+        # Regional check — one expander per check type
+        st.markdown("### Regional Fairness")
+        regional = results["checks"]["regional"]
+        st.markdown(f"**Metric:** {regional['metric']} | **Overall Mean:** {regional['overall_mean']}")
+        st.dataframe(
+            pd.DataFrame(list(regional["segment_values"].items()), columns=["Region", "Value"]),
+            use_container_width=True
+        )
+        if regional["disparities"]:
+            for d in regional["disparities"]:
+                st.warning(f"**{d['segment']}**: {d['deviation_pct']}% from mean {d['flag']}")
+
+        # Segment check — Consumer, Corporate, Home Office
+        st.markdown("### Segment Fairness")
+        segment = results["checks"]["segment"]
+        st.markdown(f"**Metric:** {segment['metric']} | **Overall Mean:** {segment['overall_mean']}")
+        st.dataframe(
+            pd.DataFrame(list(segment["segment_values"].items()), columns=["Segment", "Value"]),
+            use_container_width=True
+        )
+        if segment["disparities"]:
+            for d in segment["disparities"]:
+                st.warning(f"**{d['segment']}**: {d['deviation_pct']}% from mean {d['flag']}")
+
+# Governance — packages the last insight into a structured compliance report
+elif page == "📄 Governance":
+    st.title("Governance Report")
+    st.markdown("Generate a compliance-ready report for any AI-generated insight.")
+
+    # Guard — a query must have been run first
+    if st.session_state.last_insight is None:
+        st.info("Run a query first to generate a governance report.")
+    else:
+        # Button triggers report generation — pulls from session state
+        if st.button("Generate Governance Report"):
+            with st.spinner("Generating report..."):
+                from src.fairness import run_full_fairness_check
+                from src.governance import generate_governance_report
+
+                ins = st.session_state.last_insight
+                fairness = run_full_fairness_check(st.session_state.df)
+
+                report = generate_governance_report(
+                    question=ins["question"],
+                    insight=ins["response"],
+                    evidence=ins["evidence"],
+                    confidence=ins["confidence"],
+                    fairness=fairness,
+                    assumptions=ins["assumptions"],
+                )
+                st.session_state.last_governance = report
+
+        # Display — show the report once it exists in session state
+        if st.session_state.last_governance:
+            from src.governance import format_report_markdown
+
+            report = st.session_state.last_governance
+            st.markdown(f"### Status: {report['status']}")
+
+            # Confidence and fairness summary
