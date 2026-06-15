@@ -5,8 +5,8 @@ import numpy as np
 
 
 # EVIDENCE
-
 # Evidence trail: question + retrieved chunks → dictionary of data used by the LLM
+
 def build_evidence_chain(question: str, retrieved_docs: list) -> dict:
     return {
         "question": question,
@@ -22,8 +22,8 @@ def build_evidence_chain(question: str, retrieved_docs: list) -> dict:
 
 
 # CONFIDENCE
-
 # Estimates how trustworthy an insight is based on how much data supports it
+
 def score_confidence(retrieved_docs: list, df: pd.DataFrame) -> dict:
     chunk_score = min(len(retrieved_docs) / 5, 1.0)    # How many relevant chunks were retrieved (5 is full coverage)
     volume_score = min(len(df) / 10000, 1.0)    # how much data supports the insight; produces a High/Medium/Low confidence label
@@ -41,8 +41,8 @@ def score_confidence(retrieved_docs: list, df: pd.DataFrame) -> dict:
 
 
 # ASSUMPTIONS
-
 # Documents what the system assumed when generating the answer
+
 def document_assumptions(df: pd.DataFrame) -> list:
     return [
         f"Analysis covers {df['Order Date'].min().date()} to {df['Order Date'].max().date()}",
