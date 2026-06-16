@@ -54,3 +54,24 @@ these into a unified dashboard view:
 This mirrors an admin/command center pattern — decision makers get a full 
 picture at a glance, with the option to investigate further without leaving 
 the view.
+
+
+## Known Limitations
+
+### Retrieval Coverage
+The knowledge base chunks data by month/region, product category, region summary, 
+and customer segment. Questions requiring time-series trend analysis (e.g. 
+"how did sales change year over year?") cannot be answered accurately because 
+no time trend summary chunks exist. This is a known gap for a future iteration.
+
+### Confidence Scoring
+The current confidence scoring system measures retrieval coverage (how many 
+chunks were retrieved) and data volume, not answer quality. A response that 
+says "I don't have enough data to answer" will still score High confidence if 
+5 chunks were retrieved. A future improvement would detect hedging language 
+in the LLM response and downgrade confidence accordingly.
+
+### Data Freshness
+The knowledge base is built once and persisted to disk. If the underlying 
+dataset changes, the knowledge base must be manually rebuilt. A production 
+system would automate this process.
