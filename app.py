@@ -253,3 +253,25 @@ elif page == "📄 Governance":
                 file_name="governance_report.md",
                 mime="text/markdown",
             )
+
+# Monitoring — tracks query history and system usage over time
+elif page == "📊 Monitoring":
+    st.title("Monitoring Dashboard")
+    st.markdown("Track queries, confidence trends, and fairness flags over time.")
+
+    # Query history — populated every time a query is run on the Insights page
+    if not st.session_state.history:
+        st.info("No queries yet — run some insights to start building history.")
+    else:
+        st.markdown(f"### Query History ({len(st.session_state.history)} total)")
+
+        # Summary metrics across all queries
+        col1, col2 = st.columns(2)
+        col1.metric("Total Queries", len(st.session_state.history))
+
+        # Each query as an expander showing the question and response
+        st.markdown("### All Queries")
+        for i, h in enumerate(reversed(st.session_state.history)):
+            idx = len(st.session_state.history) - i
+            with st.expander(f"Query {idx}: {h['question'][:80]}"):
+                st.markdown(h["response"])

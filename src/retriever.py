@@ -44,8 +44,28 @@ def dataframe_to_documents(df: pd.DataFrame) -> list:
         )
         docs.append(Document(page_content=text, metadata={"type": "category_summary", "category": category}))
 
+    # Chunk: regional summary (4 chunks — one per region, aggregated across all time)
+    for region, group in df.groupby('region'):
+        text = (
+            f"Region: {region} (All Time Summary)\n"
+            f"Total Sales: ${group['sales'].sum():,.2f} | "
+            f"Total Profit: ${group['profit'].sum():,.2f} | "
+            f"Profit Margin: {group['profit'].sum()/group['sales'].sum()*100:.1f}% | "
+            f"Orders: {len(group)}"
+        )
+        docs.append(Document(page_content=text, metadata={"type": "region_summary", "region": region}))
+
+    # Chunk: customer segment summary (3 chunks)
+    for segment, group in df.groupby('customer_segment'):
+        text = (
+            f"Segment: {segment} (All Time Summary)\n"
+            f"Total Sales: ${group['sales'].sum():,.2f} | "
+            f"Total Profit: ${group['profit'].sum():,.2f} | "
+            f"Orders: {len(group)}"
+        )
+        docs.append(Document(page_content=text, metadata={"type": "segment_summary", "segment": segment}))
+
     return docs
-# 4 regions × 48 months = 192 monthly/region chunks, plus 3 category chunks = 195 total
 
 
 # KNOWLEDGE BASE
